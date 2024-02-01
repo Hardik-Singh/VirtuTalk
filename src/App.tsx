@@ -10,7 +10,7 @@ function App() {
   const [inputValue, setInputValue] = useState('');
   const [gptData, setGptData] = useState<any|null>(null);
 
-  const openai = new OpenAI({apiKey:'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', dangerouslyAllowBrowser: true});
+  const openai = new OpenAI({apiKey:import.meta.env.VITE_OPENAI_API_KEY, dangerouslyAllowBrowser: true});
 
   async function gptreq() {
     const completion = await openai.chat.completions.create({

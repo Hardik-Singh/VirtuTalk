@@ -6,7 +6,7 @@ CORS(app)
 
 @app.route("/")
 def root():
-    data = {"message": "Hello, this is the root route!"}
+    data = {"api_key": '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'}
     return jsonify(data)
 
 if __name__ == "__main__":
