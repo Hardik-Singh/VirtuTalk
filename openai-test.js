@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 const openai = new OpenAI();
 
-async function main() {
+async function gptreq() {
   const completion = await openai.chat.completions.create({
     messages: [{ role: "system", content: "Whats the last message you sent." }],
   
