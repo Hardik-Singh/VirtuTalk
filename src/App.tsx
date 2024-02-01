@@ -1,46 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState, useEffect } from 'react';
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [data, setData] = useState(null);
   const [message, setMessage] = useState('');
   const [inputValue, setInputValue] = useState('');
 
-  const handleInputChange = (event) => {
+  useEffect(() => {
+    fetch("http://localhost:5003/") // Assuming Flask is running on port 5003
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json(); // Parse the response as JSON
+      })
+      .then((responseData) => {
+        setData(responseData);
+        console.log(responseData);
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>)  => {
     setInputValue(event.target.value);
   };
 
-  const handleButtonCLick = () => {
-    // Save the input value or perform any other action with it
+  const handleButtonClick = () => {
     setMessage(inputValue);
-    // Reset the input value
     setInputValue('');
   };
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noopener noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
       <h1>Bite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
         <input
           type="text"
           value={inputValue}
           onChange={handleInputChange}
           placeholder="Type something..."
         />
-        <button onClick={handleButtonCLick}>Save Input</button>
+        <button onClick={handleButtonClick}>Save Input</button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
@@ -49,6 +50,7 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
       <p>Message: {message}</p>
+      <p>Data: {data ? JSON.stringify(data) : null}</p>
     </>
   );
 }
