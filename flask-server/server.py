@@ -1,13 +1,17 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+from deepface import DeepFace
 
 app = Flask(__name__)
 CORS(app)
 
 @app.route("/")
 def root():
-    data = {"api_key": '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'}
-    return jsonify(data)
+    objs = DeepFace.analyze(img_path = "test.jpeg", 
+        actions = ['age', 'gender', 'race', 'emotion']
+    )   
+    print("Dominant Emotion:", objs[0]['dominant_emotion'])
+    return jsonify(objs[0]['dominant_emotion'])
 
 if __name__ == "__main__":
     app.run(port=5003)
