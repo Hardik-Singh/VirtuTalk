@@ -1,17 +1,38 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from deepface import DeepFace
+import cv2
+import numpy as np
+import urllib.request as ur
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route("/")
+@app.route("/", methods=['POST'])
+
 def root():
-    objs = DeepFace.analyze(img_path = "test.jpeg", 
-        actions = ['age', 'gender', 'race', 'emotion']
-    )   
-    print("Dominant Emotion:", objs[0]['dominant_emotion'])
-    return jsonify(objs[0]['dominant_emotion'])
+    try:
+        data = request.get_json()
+
+        link = data.get('link', '')
+
+        # Read the image using OpenCV
+        req = ur.urlopen(link)
+        arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+        img = cv2.imdecode(arr, -1) # 'Load it as it is'
+        # Convert RGB to BGR
+        img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+        # Analyze the image using DeepFace
+        objs = DeepFace.analyze(img_path=img_bgr, actions=['age', 'gender', 'race', 'emotion'])
+
+        if objs:
+            print("Dominant Emotion:", objs[0]['dominant_emotion'])
+            return jsonify(objs[0]['dominant_emotion'])
+        else:
+            return jsonify({"error": "No analysis results found"})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 if __name__ == "__main__":
     app.run(port=5003)

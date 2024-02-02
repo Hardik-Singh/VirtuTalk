@@ -13,6 +13,8 @@ function App() {
 
   const openai = new OpenAI({ apiKey: import.meta.env.VITE_OPENAI_API_KEY, dangerouslyAllowBrowser: true });
 
+  
+
   async function gptreq() {
     const completion = await openai.chat.completions.create({
       messages: [{ role: "system", content: "Hello GPT, you are acting as virtuchat, a online therapist that takes in an emotion, and words spoken by a person and gives a response. Here is the emotion" + data + " and what the person said" + transcript }],
@@ -30,15 +32,24 @@ function App() {
     browserSupportsSpeechRecognition
   } = useSpeechRecognition();
 
+  const postData = {
+    link: 'https://www.shutterstock.com/image-photo/injured-woman-bruise-on-face-260nw-1737953294.jpg',
+  };
 
   useEffect(() => {
-    fetch("http://localhost:5003/")
-      .then(res => res.json())
-      .then(data => {
-        setData(data);
-        console.log(data);
-      });
-  }, []);
+    fetch("http://localhost:5003/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(postData),
+  })
+    .then(res => res.json())
+    .then(data => {
+      setData(data);
+      console.log(data);
+    });
+}, []);
 
   const [isListening, setIsListening] = useState(false);
   
@@ -72,6 +83,7 @@ function App() {
             <p>{transcript}</p>
           </div>
         </div>
+
         {data && (
           <div className="mt-4">
             <p className="text-xl font-semibold">Fetched Data:</p>

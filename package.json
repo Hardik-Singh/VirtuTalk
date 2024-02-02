@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
+    "aws-sdk": "^2.1549.0",
     "dotenv": "^16.4.1",
     "openai": "^4.26.0",
     "react": "^18.2.0",
