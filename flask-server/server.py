@@ -16,15 +16,12 @@ def root():
 
         link = data.get('link', '')
 
-        # Read the image using OpenCV
         req = ur.urlopen(link)
         arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
         img = cv2.imdecode(arr, -1) # 'Load it as it is'
-        # Convert RGB to BGR
         img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-        # Analyze the image using DeepFace
-        objs = DeepFace.analyze(img_path=img_bgr, actions=['age', 'gender', 'race', 'emotion'])
+        objs = DeepFace.analyze(img_path=img_bgr, actions=['age', 'gender', 'race', 'emotion'], enforce_detection=False)
 
         if objs:
             print("Dominant Emotion:", objs[0]['dominant_emotion'])

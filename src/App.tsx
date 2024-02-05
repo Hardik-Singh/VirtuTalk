@@ -1,19 +1,55 @@
 import "regenerator-runtime/runtime";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import OpenAI from "openai";
 import { FaMicrophone } from 'react-icons/fa';
+import Webcam from "react-webcam";
+import AWS from 'aws-sdk';
 
 
 function App() {
   const [data, setData] = useState(null);
   const [inputValue, setInputValue] = useState('');
   const [gptData, setGptData] = useState<any | null>(null);
+  const [link, setLink] = useState("");
 
   const openai = new OpenAI({ apiKey: import.meta.env.VITE_OPENAI_API_KEY, dangerouslyAllowBrowser: true });
 
+  AWS.config.update({
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY,
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+    region: import.meta.env.VITE_AWS_REGION,
+  });
+
+  const s3 = new AWS.S3();
+
+  const handleUploadImage = async () => {
+    if (imgSrc) {
+      const imageBlob = await fetch(imgSrc).then((res) => res.blob());
+      const timestamp = new Date().getTime();
+      const fileName = `image_${timestamp}.jpg`;
   
+      const params = {
+        Bucket: 'virtuchatimages',
+        Key: fileName,
+        Body: imageBlob,
+        ContentType: 'image/jpeg',
+        ACL: 'public-read', 
+      };
+  
+      try {
+        const uploadResult = await s3.upload(params).promise();
+        setLink(uploadResult.Location);
+        console.log('Image uploaded successfully!');
+        console.log(link);
+      } catch (error) {
+        console.error('Error uploading image to S3:', error);
+      }
+    } else {
+      console.error('No image to upload.');
+    }
+  };
 
   async function gptreq() {
     const completion = await openai.chat.completions.create({
@@ -25,6 +61,8 @@ function App() {
     setGptData(completion.choices[0].message.content);
   }
 
+  
+  
   const {
     transcript,
     listening,
@@ -33,37 +71,47 @@ function App() {
   } = useSpeechRecognition();
 
   const postData = {
-    link: 'https://www.shutterstock.com/image-photo/injured-woman-bruise-on-face-260nw-1737953294.jpg',
+    link: link,
   };
 
   useEffect(() => {
     fetch("http://localhost:5003/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(postData),
-  })
-    .then(res => res.json())
-    .then(data => {
-      setData(data);
-      console.log(data);
-    });
-}, []);
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postData),
+    })
+      .then(res => res.json())
+      .then(data => {
+        setData(data);
+        console.log(data);
+      });
+  }, []);
 
   const [isListening, setIsListening] = useState(false);
-  
+
   const handleStartListening = () => {
-    if(isListening) {
+    if (isListening) {
       SpeechRecognition.stopListening();
     } else {
-      SpeechRecognition.startListening({continuous: true});
+      SpeechRecognition.startListening({ continuous: true });
     }
     setIsListening(!isListening);
   };
 
+  const webcamRef = useRef<Webcam>(null);
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+
+  const capture = useCallback(() => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (imageSrc) {
+      setImgSrc(imageSrc);
+    }
+  }, [webcamRef]);
+
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center scroll-container justify-center h-screen">
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">VirtuChat</h1>
 
@@ -78,12 +126,20 @@ function App() {
           <div>
             <p>Microphone: {listening ? 'on' : 'off'}</p>
             <button onClick={handleStartListening}>
-              <FaMicrophone size={24} color={listening ? "green":"red"}/>
+              <FaMicrophone size={24} color={listening ? "green" : "red"} />
             </button>
             <p>{transcript}</p>
           </div>
         </div>
-
+        <div>
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat='image/jpeg'
+          />
+          <button onClick={capture}>Click on me</button>
+          <button onClick={handleUploadImage}>Upload Image to AWS</button>
+        </div>
         {data && (
           <div className="mt-4">
             <p className="text-xl font-semibold">Fetched Data:</p>
