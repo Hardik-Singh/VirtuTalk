@@ -61,8 +61,7 @@ function App() {
     setGptData(completion.choices[0].message.content);
   }
 
-  
-  
+
   const {
     transcript,
     listening,
@@ -87,7 +86,7 @@ function App() {
         setData(data);
         console.log(data);
       });
-  }, []);
+  }, [link]);
 
   const [isListening, setIsListening] = useState(false);
 
@@ -128,14 +127,14 @@ function App() {
             <button onClick={handleStartListening}>
               <FaMicrophone size={24} color={listening ? "green" : "red"} />
             </button>
-            <p>{transcript}</p>
           </div>
         </div>
-        <div>
+        <div className='center-align align-center content-center justify-center'>
           <Webcam
             audio={false}
             ref={webcamRef}
             screenshotFormat='image/jpeg'
+            className="center-align"
           />
           <button onClick={capture}>Click on me</button>
           <button onClick={handleUploadImage}>Upload Image to AWS</button>
